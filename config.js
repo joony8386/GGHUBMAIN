@@ -4,7 +4,7 @@
  * 2. Commit. The site picks it up within 1–2 minutes.
  */
 window.GG_CONFIG = {
-  API_URL: 'PASTE_YOUR_WEB_APP_URL_HERE',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwCr0gyfCukSqN88KD6ZwsBUsUzaqus0oSnTLFSYn0t9POdqmvyvaIUBvr04nobkahA/exec',
 
   // How often each open page checks the Sheet for other people's changes (seconds). Don't go below 5.
   POLL_SECONDS: 8

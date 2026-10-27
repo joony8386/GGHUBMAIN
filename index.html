@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f6f5c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Task Hub">
+<title>ใกล้กัน Task Hub</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- passcode screen: shown until the device has the team passcode -->
+<div id="gate" hidden>
+  <form class="gate-card" id="gateForm" autocomplete="off">
+    <h2>ใกล้กัน Task Hub<span class="en">Glaigan Task Hub</span></h2>
+    <p>ใส่รหัสทีมเพื่อเปิดตารางงาน<span class="en">Enter the team passcode to open the board</span></p>
+    <input type="password" id="gateKey" placeholder="รหัสทีม / Team passcode" aria-label="รหัสทีม / Team passcode">
+    <button type="submit">เข้าใช้งาน · Open</button>
+    <div id="gateMsg" role="alert"></div>
+  </form>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">ใกล้กัน · Glaigan Team Ops</div>
+    <h1>ตารางงานกลางของทีม<span class="en">Team Central Task Board</span></h1>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <section class="panel active" id="panel-overview">
+    <div id="urgentBox"></div>
+    <div class="grid-people" id="overviewGrid"></div>
+  </section>
+
+  <section class="panel" id="panel-attendance"></section>
+
+  <!-- person panels injected by JS -->
+  <div id="personPanels"></div>
+
+  <section class="panel" id="panel-calendar"></section>
+
+  <footer class="foot">อัปเดตข้อมูลจาก JD ของแต่ละตำแหน่ง (ก.ย. 2569) · เช็กบ็อกซ์ทุกช่องบันทึกแบบเรียลไทม์ให้ทุกคนที่เปิดหน้านี้เห็นตรงกัน<span class="en">Updated from each position's job description (Sep 2026) · Every entry saves in real time, so everyone with this page open sees the same thing.</span></footer>
+</div>
+<div class="status-pill" id="statusPill">กำลังเชื่อมต่อ… · Connecting…</div>
+
+<div class="modal-backdrop" id="tmBackdrop">
+  <div class="modal-box" id="tmBox" role="dialog" aria-modal="true" aria-label="รายละเอียด Task / Task details">
+    <button type="button" class="modal-close" id="tmClose" aria-label="ปิด / Close">✕</button>
+    <div class="modal-section" style="padding-right:26px;">
+      <label class="modal-label" for="tmText">Task<span class="en">Task name</span></label>
+      <input type="text" class="att-input" id="tmText">
+    </div>
+    <div class="modal-section"><div class="modal-label">ประเภทงาน<span class="en">Type</span></div><div class="resp-chips" id="tmTypes"></div></div>
+    <div class="modal-section modal-row">
+      <div><label class="modal-label" for="tmDue">กำหนดส่ง<span class="en">Due date</span></label><input type="date" class="att-input" id="tmDue"></div>
+      <div style="flex:2 1 240px;"><div class="modal-label">สถานะ<span class="en">Status</span></div><div class="resp-chips" id="tmStatus"></div></div>
+    </div>
+    <div class="modal-section"><div class="modal-label">ผู้รับผิดชอบหลัก<span class="en">Owner</span></div><div class="resp-chips" id="tmOwner"></div></div>
+    <div class="modal-section"><div class="modal-label">ทำร่วมกับ<span class="en">Working with</span></div><div class="resp-chips" id="tmWith"></div></div>
+    <div class="modal-section">
+      <div class="modal-label">ขั้นตอนย่อย (เช็กลิสต์ว่าครบไหม)<span class="en">Sub-steps (checklist)</span></div>
+      <div id="tmSubs" class="tm-subs"></div>
+      <div style="display:flex; gap:6px;">
+        <input type="text" class="att-input" id="tmSubText" placeholder="เพิ่มขั้นตอน เช่น ขอใบเสนอราคา / Add a step, e.g. request a quote">
+        <button type="button" class="att-btn" id="tmSubAdd">เพิ่ม <span class="en-i">· Add</span></button>
+      </div>
+    </div>
+    <div class="modal-section"><label class="modal-label" for="tmLink">ลิงก์งาน / เอกสาร<span class="en">Task link / document</span></label><input type="text" class="att-input" id="tmLink" placeholder="https://"></div>
+    <div class="modal-section"><label class="modal-label" for="tmNote">หมายเหตุ<span class="en">Notes</span></label><textarea class="att-input" id="tmNote" rows="3"></textarea></div>
+    <div class="tm-meta" id="tmMeta"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="att-btn primary" id="tmSave">บันทึก <span class="en-i">· Save</span></button>
+        <button type="button" class="att-btn" id="tmCancel">ยกเลิก <span class="en-i">· Cancel</span></button>
+      </div>
+      <button type="button" class="att-btn" id="tmDelete">ลบ Task <span class="en-i">· Delete task</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="attModalBackdrop">
+  <div class="modal-box" id="attModalBox" role="dialog" aria-modal="true" aria-labelledby="attModalTitle">
+    <button type="button" class="modal-close" id="attModalClose" aria-label="ปิด / Close">✕</button>
+    <h3 id="attModalTitle" style="font-size:18px; padding-right:26px;"></h3>
+    <div class="modal-section">
+      <div class="modal-label">สถานะ<span class="en">Status</span></div>
+      <div class="resp-chips" id="attStatusChips"></div>
+    </div>
+    <div class="modal-section">
+      <label class="modal-label" for="attNote">หมายเหตุ (ไม่บังคับ)<span class="en">Note (optional)</span></label>
+      <input type="text" class="att-input" id="attNote" placeholder="เช่น ไปงาน Decathlon, ลาครึ่งวันเช้า / e.g. at Decathlon event, half-day morning leave">
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <button type="button" class="att-btn primary" id="attSave">บันทึก <span class="en-i">· Save</span></button>
+      <button type="button" class="att-btn" id="attClear">ล้างสถานะ <span class="en-i">· Clear status</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="eventModalBackdrop">
+  <div class="modal-box" id="eventModalBox" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+    <button type="button" class="modal-close" id="eventModalClose" aria-label="ปิด / Close">✕</button>
+    <div>
+      <h3 id="eventModalTitle" style="font-size:18px; padding-right:26px;"></h3>
+      <div class="tm-meta" id="eventModalDate" style="margin-top:3px;"></div>
+    </div>
+
+    <div class="modal-section"><div class="modal-label">ประเภทงาน<span class="en">Type</span></div><div class="resp-chips" id="evTypes"></div></div>
+    <div class="modal-section modal-row">
+      <div><label class="modal-label" for="evTime">เวลา<span class="en">Time</span></label><input type="time" class="att-input" id="evTime"></div>
+      <div style="flex:2 1 240px;"><div class="modal-label">จัดที่ไหน<span class="en">Where</span></div><div class="resp-chips" id="evWhere"></div></div>
+    </div>
+    <div class="modal-section">
+      <label class="modal-label" for="evPlace">ชื่อสถานที่<span class="en">Place name</span></label>
+      <input type="text" class="att-input" id="evPlace" placeholder="เช่น Decathlon บางนา, ห้องประชุมชั้น 3 / e.g. Decathlon Bangna, 3rd-floor meeting room">
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">ผู้รับผิดชอบ (ระบบสร้าง Task ให้)<span class="en">Responsible (a task is created for them)</span></div>
+      <div class="resp-chips" id="eventRespChips"></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">ไปด้วย / ร่วมงาน<span class="en">Going along / joining</span></div>
+      <div class="resp-chips" id="evWith"></div>
+    </div>
+    <div class="modal-section modal-row">
+      <div>
+        <label class="modal-label" for="eventDue">กำหนดเสร็จ<span class="en">Due date</span></label>
+        <input type="date" class="att-input" id="eventDue">
+      </div>
+      <div style="flex:2 1 240px;">
+        <label class="modal-label" for="eventNote">รายละเอียด / ความคืบหน้า<span class="en">Details / progress</span></label>
+        <textarea class="att-input" id="eventNote" rows="3" placeholder="กรอกรายละเอียด / Enter details"></textarea>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+      <button type="button" class="att-btn primary" id="eventSaveMeta">บันทึก <span class="en-i">· Save</span></button>
+      <button type="button" class="att-btn" id="evDelete" hidden>ลบกิจกรรม <span class="en-i">· Delete event</span></button>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-label">อัพเดทความคืบหน้า<span class="en">Progress updates</span></div>
+      <div id="eventComments" class="comment-list"></div>
+      <div class="comment-form">
+        <input type="text" id="commentAuthor" placeholder="ชื่อคุณ / Your name">
+        <input type="text" id="commentText" placeholder="อัพเดทความคืบหน้า... / Progress update...">
+        <button type="button" class="att-btn primary" id="commentSubmit">ส่ง <span class="en-i">· Send</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="sheets-db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
